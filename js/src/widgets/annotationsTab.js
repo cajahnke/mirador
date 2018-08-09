@@ -180,8 +180,21 @@
                 this.element = jQuery(_this.template(templateData)).appendTo(_this.appendTo);
             }
             _this.bindEvents();
-
-
+            if (_this.state.getWindowAnnotationsList(_this.windowId) && _this.state.getWindowAnnotationsList(_this.windowId).length > 0 && _this.state.getWindowAnnotationsList(_this.windowId)[0].resource.chars.length > 0 && (typeof mira.annotationDisplayState === 'undefined' || mira.annotationDisplayState === true)){
+                mira.eventEmitter.publish('sidePanelVisibilityByTab.' + _this.windowId, true);
+            } else {
+                mira.eventEmitter.publish('sidePanelVisibilityByTab.' + _this.windowId, false);
+            }
+            jQuery.each(_this.state.getWindowAnnotationsList(_this.windowId), function(index, annotation) {
+                if (annotation.endpoint === 'manifest' && annotation.resource.chars.length > 0 && (typeof mira.annotationDisplayState === 'undefined' || mira.annotationDisplayState === true)){
+                    $('div.sidePanel').css('width','25%');
+                    $('div.view-container').css('margin-left','25%');
+                    _this.appendTo.html('<h2>Transcript</h2>').append(annotation.resource.chars).css('overflow','auto').css('width','100%');
+                    $('a[data-hasqtip="5"]').css('visibility','visible');
+                } else {
+                    $('a[data-hasqtip="5"]').css('visibility','hidden');
+                }
+            });
             if (state.visible) {
                 this.element.show();
             } else {
