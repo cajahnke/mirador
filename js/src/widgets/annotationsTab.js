@@ -59,10 +59,11 @@
             localState = this.localState();
             jQuery.each(_this.state.getWindowAnnotationsList(_this.windowId), function(index, value) {
               //loads annoations from external annotationLists
-              if(value.endpoint && typeof value.endpoint === 'string') {
-                  annotationSources.push(value.resource);
-              }
-              else if (value.resource){
+              if(typeof value !== 'undefined' && typeof value.endpoint === 'string') {
+                  annotationSources.push('manifest');
+              } else if (typeof value !== 'undefined' && typeof value.endpoint !== 'undefined' && typeof value.endpoint.name !== 'undefined') {
+                    annotationSources.push(value.endpoint.name);
+              } else if (value.resource){
                 //loads annoations from external annotationLists
                 if(value.resource.endpoint && typeof value.resource.endpoint === 'string') {
                   annotationSources.push(value.resource);
