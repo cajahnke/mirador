@@ -17,40 +17,39 @@
 (function($){
 
   $.Endpoint = function(options) {
-
+	  var requestorIP;
     jQuery.extend(this, {
       dfd:             null,
-      annotationsList: [],        //OA list for Mirador use
+      annotationsList: [],
       windowID:        null,
       eventEmitter:    null
     }, options);
-
+	this.targetServer = location.protocol + '//' + (location.hostname.indexOf('hrch-webdev') > -1 ? 'hrch-webdev.hrc' : 'norman.hrc') + '.utexas.edu';
     this.init();
   };
-
   $.Endpoint.prototype = {
     init: function() {
-      //whatever initialization your endpoint needs       
+		jQuery.get(this.targetServer + '/includes/verify.cfc?method=whoAmI').done(function(IPcheck){
+			requestorIP = IPcheck.replace(/\"/g,'');
+		});
     },
-
-    //Search endpoint for all annotations with a given URI in options
     search: function(options, successCallback, errorCallback) {
       var _this = this;
-
-      //use options.uri
       jQuery.ajax({
-        url: '',
+        url: _this.targetServer + '/notDM/annotateCDM.cfc?method=getThem&targetCanvas=' + options.uri,
         type: 'GET',
         dataType: 'json',
         headers: { },
         data: { },
         contentType: "application/json; charset=utf-8",
         success: function(data) {
-          //check if a function has been passed in, otherwise, treat it as a normal search
           if (typeof successCallback === "function") {
             successCallback(data);
           } else {
-            jQuery.each(data, function(index, value) {
+            for (var aL in _this.annotationsList){
+				_this.annotationsList.pop();
+			}
+			jQuery.each(data, function(index, value) {
               _this.annotationsList.push(_this.getAnnotationInOA(value));
             });
             _this.dfd.resolve(true);
@@ -63,13 +62,11 @@
         }
       });
     },
-    
-    //Delete an annotation by endpoint identifier
     deleteAnnotation: function(annotationID, successCallback, errorCallback) {
-      var _this = this;        
+      var _this = this;
       jQuery.ajax({
-        url: '',
-        type: 'DELETE',
+        url: _this.targetServer + '/notDM/annotateCDM.cfc?method=killIt&targetID=' +annotationID,
+        type: 'GET',
         dataType: 'json',
         headers: { },
         contentType: "application/json; charset=utf-8",
@@ -85,43 +82,16 @@
         }
       });
     },
-    
-    //Update an annotation given the OA version
     update: function(oaAnnotation, successCallback, errorCallback) {
       var annotation = this.getAnnotationInEndpoint(oaAnnotation),
       _this = this;
-      
       jQuery.ajax({
-        url: '',
+        url: _this.targetServer + '/notDM/annotateCDM.cfc?method=saveIt',
         type: 'POST',
         dataType: 'json',
         headers: { },
-        data: '',
-        contentType: "application/json; charset=utf-8",
-        success: function(data) {
-          if (typeof successCallback === "function") {
-            successCallback();
-          }
-        },
-        error: function() {
-          if (typeof errorCallback === "function") {
-            errorCallback();
-          }
-        }
-      });
-    },
-
-    //takes OA Annotation, gets Endpoint Annotation, and saves
-    //if successful, MUST return the OA rendering of the annotation
-    create: function(oaAnnotation, successCallback, errorCallback) {
-      var _this = this;
-      
-      jQuery.ajax({
-        url: '',
-        type: 'POST',
-        dataType: 'json',
-        headers: { },
-        data: '',
+        data: JSON.stringify(annotation),
+		processData: false,
         contentType: "application/json; charset=utf-8",
         success: function(data) {
           if (typeof successCallback === "function") {
@@ -135,7 +105,28 @@
         }
       });
     },
-
+    create: function(oaAnnotation, successCallback, errorCallback) {
+      var _this = this;
+      jQuery.ajax({
+        url: _this.targetServer + '/notDM/annotateCDM.cfc?method=saveIt',
+        type: 'POST',
+        dataType: 'json',
+        headers: { },
+        data: JSON.stringify(oaAnnotation),
+		processData: false,
+        contentType: "application/json; charset=utf-8",
+        success: function(data) {
+          if (typeof successCallback === "function") {
+            successCallback(_this.getAnnotationInOA(data));
+          }
+        },
+        error: function(data) {
+          if (typeof errorCallback === "function") {
+            errorCallback();
+          }
+        }
+      });
+    },
     set: function(prop, value, options) {
       if (options) {
         this[options.parent][prop] = value;
@@ -143,14 +134,23 @@
         this[prop] = value;
       }
     },
-
-    //Convert Endpoint annotation to OA
     getAnnotationInOA: function(annotation) {
+		var annoPlus =  typeof annotation === "string" ? JSON.parse(annotation) : annotation;
+		if (typeof annoPlus.endpoint === 'undefined'){
+			annoPlus.endpoint = this;
+		}
+		annoPlus['@id'] = String(annoPlus['@id']);
+		return annoPlus
     },
-
-    // Converts OA Annotation to endpoint format
     getAnnotationInEndpoint: function(oaAnnotation) {
+		if (typeof oaAnnotation.endpoint !== 'undefined'){
+			delete oaAnnotation.endpoint;
+		}
+		oaAnnotation['@id'] = String(oaAnnotation['@id']);
+		return oaAnnotation;
+    },
+    userAuthorize: function(action, annotation) {
+      return requestorIP === annotation.annotatedBy.name ? true : false;
     }
-  };
-
+  }
 }(Mirador));
