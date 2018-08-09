@@ -163,25 +163,31 @@
   },
 
   getMetadataLinks: function(jsonLd) {
-    // #414
-    return [
-      {
-        identifier: 'related',
-        label: i18next.t('related'),
-        value: this.stringifyRelated(jsonLd.related || '')
-      }, {
-        identifier: 'seeAlso',
-        label: i18next.t('seeAlso'),
-        value: this.stringifyRelated(jsonLd.seeAlso || '')
-      }, {
-        identifier: 'manifest',
-        label: i18next.t('manifest'),
-        value: this.stringifyRelated(jsonLd['@id'] || '')
-      }, {
-        identifier: 'within',
-        label: i18next.t('within'),
-        value: this.getWithin(jsonLd.within || '')
+    var MDsource,
+      MDFA1,
+      MDFA2;
+    if (jsonLd.metadata) {
+    jQuery.each(jsonLd.metadata, function(index, item) {
+      if (item.label === 'Source'){
+        MDsource = item;
+      } 
+      if (item.value.indexOf('http://norman.hrc.utexas.edu/fasearch/findingAid.cfm?eadid=') != -1){
+      if (typeof MDFA1 !== 'undefined'){
+        MDFA2 = item;
+      } else {
+        MDFA1 = item;
       }
+      }
+    });
+    }
+    return [
+    {label: 'Manifest', value: this.stringifyRelated(jsonLd['@id'] || '')},
+    {label: i18next.t(typeof MDsource !== 'undefined' ? MDsource.label : ''), value: this.stringifyRelated(typeof MDsource !== 'undefined' ? MDsource.value : '' || '')},
+    {label: i18next.t(typeof MDFA1 !== 'undefined' ? MDFA1.label : ''), value: this.stringifyRelated(typeof MDFA1 !== 'undefined' ? MDFA1.value : '' || '')},
+    {label: i18next.t(typeof MDFA2 !== 'undefined' ? MDFA2.label : ''), value: this.stringifyRelated(typeof MDFA2 !== 'undefined' ? MDFA2.value : '' || '')},
+    {label: i18next.t('related'), value: this.stringifyRelated(jsonLd.related || '')},
+    {label: i18next.t('seeAlso'), value: this.stringifyRelated(jsonLd.seeAlso || '')},
+    {label: i18next.t('within'),  value: this.stringifyRelated(jsonLd.within || '')}
     ];
   },
 
