@@ -185,11 +185,24 @@
         if (_this.hud.annoState.current === 'off') {
           _this.hud.annoState.displayOn(this);
           _this.annotationState = 'on';
+          if (_this.annotationsLayer.annotationsList && _this.annotationsLayer.annotationsList.length > 0){
+            for (var anno in _this.annotationsLayer.annotationsList){
+              if (_this.annotationsLayer.annotationsList[anno].endpoint === 'manifest'){
+                _this.eventEmitter.publish('sidePanelVisibilityByTab.' + _this.windowId, true);
+              $(this).parents('.view-container').siblings('.sidePanel').css('width','25%');
+              $(this).parents('.view-container').css('margin-left','25%');
+              $(this).parents('.view-container').siblings('.sidePanel').children('.tabContentArea').html('<h2>Transcript</h2>').append(_this.annotationsLayer.annotationsList[anno].resource.chars).css('overflow','auto').css('width','100%');
+              _this.annotationDisplayState = true;
+              }
+            }
+          }
         } else {
           //make sure to force the controls back to auto fade
           _this.forceShowControls = false;
           _this.hud.annoState.displayOff(this);
           _this.annotationState = 'off';
+          _this.eventEmitter.publish('sidePanelVisibilityByTab.' + _this.windowId, false);
+          _this.annotationDisplayState = false;
         }
       });
 
