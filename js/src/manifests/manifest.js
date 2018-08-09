@@ -156,7 +156,25 @@
         for (var i = 0; i < canvas.otherContent.length; i++) {
           annotationsListUrls.push(canvas.otherContent[i]['@id']);
         }
-      }
+      } else if (canvas && canvas.images){
+	  for (var i = 0; i < canvas.images.length; i++) {
+		  if (canvas.images[i]['@type'] === 'oa:Annotation'){
+			var canvasURLArr = canvas['@id'].split('/'),
+				manifestURLArr = _this.uri.split('/'), manIX, CdmColl, man, can;
+			for (manIX in manifestURLArr){
+				if (manifestURLArr[manIX].indexOf('p15878coll') !== -1){
+					CdmColl = manifestURLArr[manIX];
+					if (manIX < manifestURLArr.length - 1){
+						man = manifestURLArr[Number(manIX) + 1];
+						can = canvasURLArr[canvasURLArr.indexOf(CdmColl) + 1]
+					}
+					break;
+				}
+			}
+			annotationsListUrls.push(location.protocol + '//' + (location.hostname.indexOf('hrch-webdev') > -1 ? 'hrch-webdev.hrc' : 'norman.hrc') + '.utexas.edu/notDM/canvasTranscript/' + CdmColl + '/' + man + '/' + can);
+		  }
+	  }
+  }
       return annotationsListUrls;
     },
     getStructures: function() {
