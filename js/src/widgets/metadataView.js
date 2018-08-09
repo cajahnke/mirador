@@ -129,22 +129,20 @@
 
   getMetadataDetails: function(jsonLd) {
       var mdList = [
-        { label: i18next.t('label'),
-          value: '<b>' + ($.JsonLd.getTextValue(jsonLd.label) || '') + '</b>' },
-        { label: i18next.t('description'),
-          value: $.JsonLd.getTextValue(jsonLd.description) || '' }
+      { label: 'description',
+        value: Mirador.JsonLd.getTextValue(jsonLd.description) || '' }
       ];
-
       if (jsonLd.metadata) {
         value = "";
         label = "";
         jQuery.each(jsonLd.metadata, function(index, item) {
-          label = $.JsonLd.getTextValue(item.label);
-          value = $.JsonLd.getTextValue(item.value);
+          label = Mirador.JsonLd.getTextValue(item.label);
+          value = Mirador.JsonLd.getTextValue(item.value);
+          if (item.label != 'Source' && item.value.indexOf('http://norman.hrc.utexas.edu/fasearch/findingAid.cfm?eadid=') === -1){
           mdList.push({label: label, value: value});
+          }
         });
       }
-
       return mdList;
     },
 
